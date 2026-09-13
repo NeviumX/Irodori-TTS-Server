@@ -357,6 +357,10 @@ Common `irodori` options:
 
 Dynamic LoRA loading is per runtime process. The first request for an adapter loads it into memory; later requests for the same adapter reuse the cached adapter. To run the base model after an adapter has been loaded, omit `lora_adapter` or set it to `null`, `"none"`, or `"base"`. Dynamic LoRA is not compatible with `IRODORI_COMPILE_MODEL=true`.
 
+This fork automatically applies a compatibility fix for **PEFT 0.19.1 + torchao INT8 models** before loading the runtime, based on [PEFT #3234](https://github.com/huggingface/peft/pull/3234). It fixes `TorchaoLoraLinear.__init__() missing ... 'get_apply_tensor_subclass'` when loading a dynamic LoRA. The fix runs in memory on each server process; it does not modify installed packages or model files and requires no manual patch after reinstalling dependencies. Other PEFT versions and installations already patched by the earlier AITuberKit repair script are left unchanged. A restart is required for an already running server to use this code; Docker users should rebuild the image.
+
+Dynamic LoRA inference, adapter switching, and returning to the base model are supported. Merging/unmerging quantized weights without a requantization callback raises an error before modifying the weights. For a permanently merged checkpoint, merge into a full-precision base first. Keep `IRODORI_COMPILE_MODEL=false` for dynamic LoRA.
+
 ### Voice Management
 
 The server scans `IRODORI_VOICES_DIR` for voice files. File stems become voice IDs.

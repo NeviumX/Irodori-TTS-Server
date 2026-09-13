@@ -83,3 +83,23 @@ def test_runtime_downloads_hf_checkpoint_when_local_checkpoint_is_unset(monkeypa
     monkeypatch.setattr(runtime_module, "download_hf_checkpoint", fake_download)
 
     assert manager._resolve_checkpoint_path() == "/cache/model.safetensors"
+
+
+def test_runtime_applies_peft_compatibility_before_model_load(tmp_path, monkeypatch):
+    checkpoint = tmp_path / "model.safetensors"
+    checkpoint.write_bytes(b"test")
+    manager = RuntimeManager(Settings(checkpoint=str(checkpoint), _env_file=None))
+    calls = []
+    loaded_runtime = object()
+    monkeypatch.setattr(
+        runtime_module, "ensure_peft_torchao_compatibility", lambda: calls.append("compat")
+    )
+
+    def from_key(_key):
+        calls.append("load")
+        return loaded_runtime
+
+    monkeypatch.setattr(runtime_module.InferenceRuntime, "from_key", staticmethod(from_key))
+    assert manager.get() is loaded_runtime
+    assert manager.get() is loaded_runtime
+    assert calls == ["compat", "load"]

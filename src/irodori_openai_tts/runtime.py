@@ -13,6 +13,7 @@ from irodori_tts.inference_runtime import (
 )
 
 from .config import Settings
+from .peft_compat import ensure_peft_torchao_compatibility
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ class RuntimeManager:
                 t0 = time.perf_counter()
                 self._checkpoint_path = self._resolve_checkpoint_path()
                 logger.info("checkpoint resolved: %s", self._checkpoint_path)
+                ensure_peft_torchao_compatibility()
                 self._runtime = InferenceRuntime.from_key(
                     RuntimeKey(
                         checkpoint=self._checkpoint_path,
