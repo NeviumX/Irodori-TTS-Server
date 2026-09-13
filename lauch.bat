@@ -1,0 +1,1 @@
+uv run --no-sync python -m irodori_openai_tts --host 127.0.0.1 --port 8088
