@@ -616,6 +616,20 @@ Run import/bytecode checks:
 uv run python -m compileall src tests
 ```
 
+## Model loading and GPU memory
+
+This fork stages the TTS model on CPU, converts its floating-point weights and
+buffers to the requested precision there, and transfers it to the inference device
+afterward. Quantized torchao weights retain their quantized storage. Compilation
+runs after transfer. This avoids the upstream loader's temporary overlap of the
+original GPU weights and their precision-converted replacements. Installed
+packages and checkpoint files are not modified; CPU staging uses system RAM.
+
+After runtime loading, unused accelerator cache is released. CUDA logs report
+`allocated` (live tensor memory), `reserved` (PyTorch allocator memory), and
+`released` (unused cache returned to the driver), in MiB. Cache release cannot
+reduce resident weights. See [PyTorch CUDA memory management](https://docs.pytorch.org/docs/stable/notes/cuda.html#memory-management).
+
 ## License
 
 This server code is released under the MIT License. See [LICENSE](LICENSE).

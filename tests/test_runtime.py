@@ -43,11 +43,8 @@ def test_runtime_load_timeout_while_another_thread_is_loading(tmp_path, monkeypa
         release.wait(timeout=2)
         return loaded_runtime
 
-    monkeypatch.setattr(
-        runtime_module.InferenceRuntime,
-        "from_key",
-        staticmethod(fake_from_key),
-    )
+    monkeypatch.setattr(runtime_module, "load_runtime", fake_from_key)
+    monkeypatch.setattr(runtime_module, "ensure_peft_torchao_compatibility", lambda: None)
 
     def load_runtime():
         try:
@@ -112,7 +109,7 @@ def test_runtime_applies_peft_compatibility_before_model_load(tmp_path, monkeypa
         calls.append("load")
         return loaded_runtime
 
-    monkeypatch.setattr(runtime_module.InferenceRuntime, "from_key", staticmethod(from_key))
+    monkeypatch.setattr(runtime_module, "load_runtime", from_key)
     assert manager.get() is loaded_runtime
     assert manager.get() is loaded_runtime
     assert calls == ["compat", "load"]
